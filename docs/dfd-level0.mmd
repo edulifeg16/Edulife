@@ -1,0 +1,25 @@
+%% DFD Level 0 - Edulife System (context-level)
+flowchart LR
+  %% External entities
+  Admin[(Admin)]
+  Student[(Student)]
+  AssemblyAI[(AssemblyAI)]
+  GenAI[(Generative AI)]
+
+  %% Data stores
+  DB[(MongoDB)]
+  Uploads[(Uploads / Storage)]
+
+  %% System boundary
+  Edulife["Edulife System"]
+
+  Admin -->|upload video / manage courses| Edulife
+  Student -->|view course / request Easy Mode| Edulife
+  Edulife -->|store/read metadata| DB
+  Edulife -->|store/read files| Uploads
+  Edulife -->|request transcription| AssemblyAI
+  Edulife -->|request simplification| GenAI
+  AssemblyAI -->|transcript| Edulife
+  GenAI -->|simplified content| Edulife
+
+  %% styling and classes removed for CLI compatibility

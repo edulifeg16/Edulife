@@ -1,0 +1,36 @@
+%% DFD Level 1 - Major Processes
+flowchart LR
+	%% External entities
+	Admin[(Admin)]
+	Student[(Student)]
+
+	%% Processes
+	P1["P1: Upload and Transcribe"]
+	P2["P2: Cognitive Content Generator"]
+	P3["P3: Storage and Delivery"]
+	P4["P4: Auth and Admin"]
+
+	%% Data stores
+	DB[(MongoDB)]
+	Uploads[(Uploads / Storage)]
+
+	%% External services
+	AssemblyAI[(AssemblyAI)]
+	GenAI[(Generative AI)]
+
+	Admin -->|manage courses, trigger generation| P4
+	Student -->|play video, toggle Easy Mode| P3
+
+	P1 -->|vtt/transcript| P2
+	P1 -->|save media| P3
+	P2 -->|simplified summary, vtt, bullets| P3
+
+	P1 -->|store metadata| DB
+	P3 -->|read/write metadata| DB
+
+	P1 -->|call| AssemblyAI
+	P2 -->|call| GenAI
+	P2 -->|fallback| LocalFallback[(Local Fallback)]
+
+	%% styling and classes removed for CLI compatibility
+

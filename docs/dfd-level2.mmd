@@ -1,0 +1,30 @@
+%% DFD Level 2 - Cognitive Content Generator (internal flow)
+flowchart LR
+  %% Processes inside Cognitive Content Generator
+  CG["Cognitive Content Generator"]
+  Step1["1. Fetch transcript (from Uploads/DB)"]
+  Step2["2. Prepare prompt and options (model, params)"]
+  Step3["3. Call external model (with retries)"]
+  Step4["4. Parse model response & validate"]
+  Step5["5. Save simplified outputs (summary, bullets, vtt)"]
+  StepF["Fallback: local simplifier and VTT generator"]
+
+  %% Data stores / services
+  Uploads[(Uploads / VTT)]
+  DB[(MongoDB)]
+  GenAI[(Generative AI)]
+
+  %% Flows
+  Step1 --> Step2
+  Step2 --> Step3
+  Step3 -->|success| Step4
+  Step3 -->|failure / overloaded| StepF
+  Step4 --> Step5
+  StepF --> Step5
+
+  Step5 -->|save files| Uploads
+  Step5 -->|save metadata| DB
+  Step1 -->|read| Uploads
+  Step3 -->|call| GenAI
+
+  %% styling and classes removed for CLI compatibility
