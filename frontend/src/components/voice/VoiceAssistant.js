@@ -78,13 +78,17 @@ const VoiceAssistant = () => {
 
       utter.onend = () => {
         isSpeakingRef.current = false;
-        // Restore listening if we stopped it earlier
+        // Restore listening if we stopped it earlier — but NOT during chatbot handoff
         if (restartAfterSpeakRef.current) {
           restartAfterSpeakRef.current = false;
-          try {
-            SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
-          } catch (err) {
-            logVoice('Error restarting recognition after speak', err);
+          if (!chatbotHandoffRef.current) {
+            try {
+              SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+            } catch (err) {
+              logVoice('Error restarting recognition after speak', err);
+            }
+          } else {
+            logVoice('Skipping mic restart after speak - chatbot handoff active');
           }
         }
         if (liveRegionRef.current) liveRegionRef.current.textContent = text;
@@ -230,10 +234,15 @@ const VoiceAssistant = () => {
 
   // Auto-start listening for mobility users and keep it on throughout session
   useEffect(() => {
+    // Do NOT auto-restart if mic was intentionally paused for chatbot handoff
+    if (chatbotHandoffRef.current) {
+      logVoice('Skipping auto-start - chatbot handoff active');
+      return;
+    }
     if (user?.disabilityType === 'mobility' && isVisible && !listening) {
       logVoice('Auto-starting voice commands for mobility user - mic will stay on');
       const timer = setTimeout(() => {
-        if (!listeningRef.current && user?.disabilityType === 'mobility') {
+        if (!listeningRef.current && user?.disabilityType === 'mobility' && !chatbotHandoffRef.current) {
           SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
           setListening(true);
           logVoice('✅ Voice commands active - mic is red, ready for direct commands');
@@ -243,6 +252,9 @@ const VoiceAssistant = () => {
       return () => clearTimeout(timer);
     }
   }, [user?.disabilityType, isVisible, listening]);
+  // Flag to suppress auto-restart of VoiceAssistant mic during chatbot handoff
+  const chatbotHandoffRef = useRef(false);
+
   // Flag to track if video is playing (for filtering false commands)
   const videoPlayingRef = useRef(false);
 
@@ -894,6 +906,51 @@ const VoiceAssistant = () => {
 
         window.scrollBy({ top: amount, behavior: 'smooth' });
       },
+    },
+    // ---- Chatbot voice commands (mobility only) ----
+    {
+      command: /.*open\s*chat\s*bot.*/i,
+      callback: () => {
+        logVoice('Voice command triggered: open chatbot');
+        window.dispatchEvent(new CustomEvent('voice-open-chatbot'));
+        speak('Opening chatbot');
+      },
+    },
+    {
+      command: /.*close\s*chat\s*bot.*/i,
+      callback: () => {
+        logVoice('Voice command triggered: close chatbot');
+        window.dispatchEvent(new CustomEvent('voice-close-chatbot'));
+        speak('Closing chatbot');
+      },
+    },
+    {
+      command: /.*(chat\s*bot\s*mic|ask\s*chat\s*bot|talk\s*to\s*chat\s*bot).*/i,
+      callback: () => {
+        logVoice('Voice command triggered: chatbot mic');
+        // Set handoff flag BEFORE stopping, so auto-start effect & speak() won't restart
+        chatbotHandoffRef.current = true;
+        // Use abortListening to forcefully release the browser mic
+        try {
+          SpeechRecognition.abortListening();
+          setListening(false);
+          listeningRef.current = false;
+          logVoice('VoiceAssistant mic aborted for chatbot mic handoff');
+        } catch (e) {
+          logVoice('Error aborting VoiceAssistant mic', e);
+        }
+        speak('Activating chatbot microphone. Speak your question.');
+        // Wait for TTS to finish, then hand off to chatbot mic with delay
+        const waitForTTS = setInterval(() => {
+          if (!window.speechSynthesis.speaking) {
+            clearInterval(waitForTTS);
+            // Give browser time to fully release the mic
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('voice-chatbot-mic'));
+            }, 600);
+          }
+        }, 300);
+      },
     }
   ];
 
@@ -956,6 +1013,27 @@ const VoiceAssistant = () => {
     window.addEventListener('read-page-commands', handleReadPage);
     return () => window.removeEventListener('read-page-commands', handleReadPage);
   }, [speakCommands, speak]);
+
+  // Resume VoiceAssistant mic after chatbot mic finishes
+  useEffect(() => {
+    const handleChatbotMicDone = () => {
+      logVoice('Chatbot mic done - resuming VoiceAssistant mic');
+      // Clear handoff flag so auto-start can work again
+      chatbotHandoffRef.current = false;
+      if (user?.disabilityType === 'mobility' && isVisible) {
+        try {
+          SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+          setListening(true);
+          logVoice('VoiceAssistant mic resumed after chatbot mic handoff');
+        } catch (e) {
+          logVoice('Error resuming VoiceAssistant mic', e);
+        }
+      }
+    };
+
+    window.addEventListener('voice-chatbot-mic-done', handleChatbotMicDone);
+    return () => window.removeEventListener('voice-chatbot-mic-done', handleChatbotMicDone);
+  }, [user?.disabilityType, isVisible]);
 
   function startListening() {
     logVoice('Attempting to start listening', {

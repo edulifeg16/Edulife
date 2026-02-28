@@ -14,7 +14,11 @@ exports.processQuery = async (req, res) => {
         return res.status(400).json({ msg: 'Message is required.' });
     }
     try {
-        const prompt = `You are EduLife, a friendly and helpful AI assistant for students from 7th to 10th grade. Explain things simply. Here is the student's question: "${message}"`;
+        const prompt = `You are EduLife voice assistant. Answer ONLY in 1-2 SHORT sentences (max 25 words total). NO emojis. Be direct.
+
+Question: "${message}"
+
+Answer (max 25 words):`;
 
         // Call the model to generate content. SDK shapes vary between versions; handle multiple shapes safely.
         const result = await model.generateContent(prompt);

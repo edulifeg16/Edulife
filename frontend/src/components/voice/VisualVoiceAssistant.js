@@ -1,4 +1,4 @@
-// VisualVoiceAssistant.js
+﻿// VisualVoiceAssistant.js
 
 import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -14,11 +14,17 @@ const VisualVoiceAssistant = () => {
 
   const liveRegionRef = useRef(null);
   const pendingSubjectRef = useRef(null);
+  // Flag to suppress mic restart during chatbot handoff
+  const chatbotHandoffRef = useRef(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useContext(AuthContext);
 
-  const [ignoreSpeechUntil, setIgnoreSpeechUntil] = useState(0);
+  // --- Refs for reliable voice-command gating (no async state lag) ---
+  const isSpeakingRef = useRef(false);
+  const ignoreSpeechUntilRef = useRef(0);
+  const lastProcessedRef = useRef("");
+  const debounceTimerRef = useRef(null);
 
   const toSafeString = (v) => (v == null ? "" : String(v));
 
@@ -41,11 +47,22 @@ const VisualVoiceAssistant = () => {
       u.pitch = 1;
 
       u.onstart = () => {
-        setIgnoreSpeechUntil(Date.now() + text.length * 40);
+        isSpeakingRef.current = true;
+        // Block recognition for at least the estimated speech duration
+        ignoreSpeechUntilRef.current = Date.now() + text.length * 60 + 500;
       };
 
       u.onend = () => {
-        setIgnoreSpeechUntil(Date.now() + 400);
+        isSpeakingRef.current = false;
+        // Give a short grace period after TTS ends to avoid echo pickup
+        ignoreSpeechUntilRef.current = Date.now() + 600;
+        lastProcessedRef.current = ""; // allow new commands after TTS
+        cb && cb();
+      };
+
+      u.onerror = () => {
+        isSpeakingRef.current = false;
+        ignoreSpeechUntilRef.current = Date.now() + 300;
         cb && cb();
       };
 
@@ -53,6 +70,7 @@ const VisualVoiceAssistant = () => {
       synth.speak(u);
     } catch (e) {
       console.error("TTS error:", e);
+      isSpeakingRef.current = false;
       cb && cb();
     }
   }
@@ -121,7 +139,7 @@ const VisualVoiceAssistant = () => {
     let tries = 0;
 
     const check = () => {
-      // Find lesson blocks: anchor → parent div → span title
+      // Find lesson blocks: anchor â†’ parent div â†’ span title
       const lessonBlocks = Array.from(
         document.querySelectorAll("main.main-content a[href*='course']")
       )
@@ -139,7 +157,7 @@ const VisualVoiceAssistant = () => {
         })
         .filter(Boolean);
 
-      // Lessons found → announce and switch to lesson mode
+      // Lessons found â†’ announce and switch to lesson mode
       if (lessonBlocks.length > 0) {
         setMode("subject-lessons");
 
@@ -153,10 +171,7 @@ const VisualVoiceAssistant = () => {
             ", "
           )}. Say the lesson number or lesson name.`,
           () => {
-            try {
-              SpeechRecognition.startListening({ continuous: true });
-              setListening(true);
-            } catch {}
+            restartMic()
           }
         );
 
@@ -168,7 +183,7 @@ const VisualVoiceAssistant = () => {
       if (tries > 35) {
         try { SpeechRecognition.stopListening(); setListening(false); } catch {}
         speak("Lessons are not loading. Please try again.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch {}
+          restartMic();
         });
         return;
       }
@@ -222,7 +237,7 @@ const VisualVoiceAssistant = () => {
           });
       }
 
-      console.log('🎤 readQuizQuestion: DOM scan', { 
+      console.log('ðŸŽ¤ readQuizQuestion: DOM scan', { 
         questionFound: !!questionTextEl, 
         optionsFound: optionEls.length,
         questionText: questionTextEl?.textContent?.substring(0, 50),
@@ -232,7 +247,7 @@ const VisualVoiceAssistant = () => {
       if (!questionTextEl || optionEls.length === 0) {
         retries++;
         if (retries >= MAX_RETRIES) {
-          console.warn('🎤 readQuizQuestion: Max retries reached, giving up on finding question');
+          console.warn('ðŸŽ¤ readQuizQuestion: Max retries reached, giving up on finding question');
           // Fallback: just wait for options and announce them
           if (optionEls.length > 0) {
             const letters = ["A", "B", "C", "D"];
@@ -243,7 +258,7 @@ const VisualVoiceAssistant = () => {
             const fallbackRead = `I found ${optionEls.length} options: ` + spokenOptions.join(". ") + ". Say the option letter like A, B, C or D.";
             try { SpeechRecognition.stopListening(); setListening(false); } catch (e) { }
             speak(fallbackRead, () => {
-              try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) { }
+              restartMic();
             });
           } else {
             try { SpeechRecognition.stopListening(); setListening(false); } catch (e) { }
@@ -265,13 +280,13 @@ const VisualVoiceAssistant = () => {
         + (spokenOptions.length ? spokenOptions.join(". ") + "." : "")
         + " Say the option letter like A, B, C or D.";
 
-      console.log('🎤 readQuizQuestion: Speaking question', { fullRead: fullRead.substring(0, 80) + "..." });
+      console.log('ðŸŽ¤ readQuizQuestion: Speaking question', { fullRead: fullRead.substring(0, 80) + "..." });
 
       // ensure mic is off -> read -> start listening
-      try { SpeechRecognition.stopListening(); setListening(false); } catch (e) { console.warn('🎤 Stop listening error:', e); }
+      try { SpeechRecognition.stopListening(); setListening(false); } catch (e) { console.warn('ðŸŽ¤ Stop listening error:', e); }
       speak(fullRead, () => {
-        console.log('🎤 readQuizQuestion: Speech complete, starting listening');
-        try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) { console.warn('🎤 Start listening error:', e); }
+        console.log('ðŸŽ¤ readQuizQuestion: Speech complete, starting listening');
+        restartMic();
       });
 
       window.__quizVoiceInit = true;
@@ -287,6 +302,9 @@ const VisualVoiceAssistant = () => {
   useEffect(() => {
     const p = location.pathname || "";
 
+    // Reset dedup on route change so commands are accepted on new pages
+    lastProcessedRef.current = "";
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     if (p === "/dashboard/visual") {
       setMode("dashboard");
       stopMic();
@@ -325,6 +343,38 @@ const VisualVoiceAssistant = () => {
     const cmd = toSafeString(raw).toLowerCase().trim();
     if (!cmd) return;
 
+    // ---- Chatbot voice commands (work from any mode/page) ----
+    if (/open\s*chat\s*bot/.test(cmd)) {
+      stopMic();
+      window.dispatchEvent(new CustomEvent('voice-open-chatbot'));
+      speak('Opening chatbot', () => startMic());
+      return;
+    }
+    if (/close\s*chat\s*bot/.test(cmd)) {
+      stopMic();
+      window.dispatchEvent(new CustomEvent('voice-close-chatbot'));
+      speak('Closing chatbot', () => startMic());
+      return;
+    }
+    if (/chat\s*bot\s*mic|ask\s*chat\s*bot|talk\s*to\s*chat\s*bot/.test(cmd)) {
+      // Set handoff flag so no mic auto-restart happens
+      chatbotHandoffRef.current = true;
+      // Use abortListening to forcefully release the browser mic
+      try {
+        SpeechRecognition.abortListening();
+      } catch (e) {
+        console.warn('\ud83c\udfa4 abortListening error:', e);
+      }
+      setListening(false);
+      speak('Activating chatbot microphone. Speak your question.', () => {
+        // Give browser time to fully release the mic before chatbot grabs it
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('voice-chatbot-mic'));
+        }, 600);
+      });
+      return;
+    }
+
     // If user said quiz anywhere, block global nav from immediately doing something else.
     // We still handle 'open quiz' inside the lessons block below.
     if (cmd.includes("quiz") && mode !== "lessons" && mode !== "quiz" && mode !== "lessons") {
@@ -347,7 +397,7 @@ const VisualVoiceAssistant = () => {
       const clean = cmd.replace(/[^a-zA-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
 
       // Debug: show what we actually received (leave this while debugging)
-      console.log("🎤 [quiz] RAW:", cmd, "=> CLEAN:", clean);
+      console.log("ðŸŽ¤ [quiz] RAW:", cmd, "=> CLEAN:", clean);
 
       // direct single-word matches (common)
       if (
@@ -361,7 +411,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 0 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option A selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -371,7 +421,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 1 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option B selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -381,7 +431,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 2 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option C selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -391,7 +441,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 3 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option D selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -403,7 +453,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 0 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option A selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -414,7 +464,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 1 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option B selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -425,7 +475,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 2 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option C selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -436,7 +486,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 3 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option D selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -447,7 +497,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 0 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option A selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -456,7 +506,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 1 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option B selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -465,7 +515,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 2 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option C selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -474,7 +524,7 @@ const VisualVoiceAssistant = () => {
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 3 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Option D selected. Say yes to submit, or next for next question.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -494,7 +544,7 @@ const VisualVoiceAssistant = () => {
         } else {
           try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
           speak("No option selected. Say the option letter first.", () => {
-            try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+            restartMic()
           });
         }
         return;
@@ -513,7 +563,7 @@ const VisualVoiceAssistant = () => {
         } else {
           try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
           speak("No option selected. Say the option letter first.", () => {
-            try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+            restartMic()
           });
         }
         return;
@@ -524,7 +574,7 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = null;
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
         speak("Selection cancelled. Say the option letter again.", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
         return;
       }
@@ -532,7 +582,7 @@ const VisualVoiceAssistant = () => {
       // fallback
       try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
       speak("Say the option letter like A, B, C or D.", () => {
-        try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+        restartMic()
       });
       return;
     }
@@ -559,7 +609,7 @@ const VisualVoiceAssistant = () => {
         });
       } else {
         speak("Quiz button not found on this page", () => {
-          try { SpeechRecognition.startListening({ continuous: true }); setListening(true); } catch (e) {}
+          restartMic()
         });
       }
       return;
@@ -569,7 +619,7 @@ const VisualVoiceAssistant = () => {
     // Prevent mis-detection: do not run global nav if the user said 'quiz'
     if (cmd.includes("quiz")) return;
 
-    // GLOBAL NAVIGATION (1–8)
+    // GLOBAL NAVIGATION (1â€“8)
     const num = extractNumber(cmd);
     if (num && num >= 1 && num <= 8 && !cmd.includes("unit") && !cmd.includes("lesson")) {
       const actions = {
@@ -659,7 +709,7 @@ const VisualVoiceAssistant = () => {
       return;
     }
 
-    // ❌ Prevent “continue lesson” from running on history pages
+    // âŒ Prevent â€œcontinue lessonâ€ from running on history pages
     if (mode === "courses-history" || mode === "quizzes-history") {
       return; // do nothing
     }
@@ -727,45 +777,102 @@ const VisualVoiceAssistant = () => {
   }, [mode, navigate, pendingSubject, askContinueLesson, location.pathname]); // add location to deps
 
   // --------------------------------------------------------
-  // TRANSCRIPT HANDLER
+  // TRANSCRIPT HANDLER  (debounced + dedup + speaking-guard)
   // --------------------------------------------------------
-  const { transcript, resetTranscript } = useSpeechRecognition({
+  const { transcript, resetTranscript, finalTranscript } = useSpeechRecognition({
     commands: [{ command: "*", callback: () => {} }],
   });
 
+  // Process only once the user has *stopped* speaking for DEBOUNCE_MS
+  const DEBOUNCE_MS = 650;
+
   useEffect(() => {
-    if (!transcript) return;
+    // Prefer finalTranscript (set when browser emits isFinal); fall back to
+    // interim transcript for browsers that are slow to finalise.
+    const raw = (finalTranscript || transcript || "").trim();
+    if (!raw) return;
 
-    // debug: show raw transcript for you to paste here if needed
-    console.log("🎤 VOICE HEARD:", transcript);
-
-    if (Date.now() < ignoreSpeechUntil) {
-      resetTranscript();
+    // 1. Block while TTS is active or within the grace window
+    if (isSpeakingRef.current || Date.now() < ignoreSpeechUntilRef.current) {
+      // Don't resetTranscript here â€” it may still be forming a valid phrase.
       return;
     }
 
-    handleVoiceCommand(transcript);
-    resetTranscript();
-  }, [transcript, handleVoiceCommand, ignoreSpeechUntil]);
+    // 2. Ignore if this exact text was already processed
+    if (raw === lastProcessedRef.current) return;
+
+    // 3. Debounce: wait for speech to stabilise
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+    debounceTimerRef.current = setTimeout(() => {
+      // Re-check guards after the debounce delay
+      if (isSpeakingRef.current || Date.now() < ignoreSpeechUntilRef.current) {
+        return;
+      }
+
+      const current = (finalTranscript || transcript || "").trim();
+      if (!current || current === lastProcessedRef.current) return;
+
+      console.log("ðŸŽ¤ VOICE HEARD (debounced):", current);
+      lastProcessedRef.current = current;
+      handleVoiceCommand(current);
+      resetTranscript();
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [transcript, finalTranscript, handleVoiceCommand, resetTranscript]);
 
   // --------------------------------------------------------
   // MIC CONTROLS
   // --------------------------------------------------------
   const startMic = () => {
+    // Don't restart if chatbot handoff is active
+    if (chatbotHandoffRef.current) {
+      console.log('ðŸŽ¤ VisualVoiceAssistant: skipping startMic - chatbot handoff active');
+      return;
+    }
     try {
-      SpeechRecognition.startListening({ continuous: true });
+      lastProcessedRef.current = ""; // allow fresh commands
+      SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
       setListening(true);
     } catch {}
   };
 
   const stopMic = () => {
     try {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      lastProcessedRef.current = ""; // reset so fresh commands are accepted after restart
       SpeechRecognition.stopListening();
       setListening(false);
     } catch {}
   };
 
+  // Inline helper used inside callbacks that need to restart mic after TTS
+  const restartMic = () => {
+    try {
+      lastProcessedRef.current = "";
+      SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+      setListening(true);
+    } catch (e) {
+      console.warn('\ud83c\udfa4 restartMic error:', e);
+    }
+  };
+
   const toggleMic = () => (listening ? stopMic() : startMic());
+
+  // Resume VisualVoiceAssistant mic after chatbot mic finishes
+  useEffect(() => {
+    const handleChatbotMicDone = () => {
+      console.log('ðŸŽ¤ VisualVoiceAssistant: chatbot mic done - resuming mic');
+      chatbotHandoffRef.current = false;
+      restartMic()
+    };
+
+    window.addEventListener('voice-chatbot-mic-done', handleChatbotMicDone);
+    return () => window.removeEventListener('voice-chatbot-mic-done', handleChatbotMicDone);
+  }, []);
 
   // --------------------------------------------------------
   // SUBJECTS AUTO ANNOUNCE

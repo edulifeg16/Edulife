@@ -5,9 +5,7 @@
  * including support for S3 signed URLs.
  */
 
-import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import { apiClient, API_BASE_URL } from './apiConfig';
 
 /**
  * Get a course by ID with signed URLs for video playback
@@ -18,12 +16,12 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api
 export const getCourseWithSignedUrls = async (courseId, disabilityType = null) => {
     try {
         const params = disabilityType ? { disabilityType } : {};
-        const response = await axios.get(`${API_BASE_URL}/courses/${courseId}/signed`, { params });
+        const response = await apiClient.get(`/courses/${courseId}/signed`, { params });
         return response.data;
     } catch (error) {
         console.error('Error fetching course with signed URLs:', error);
         // Fall back to regular endpoint
-        const fallbackResponse = await axios.get(`${API_BASE_URL}/courses/${courseId}`);
+        const fallbackResponse = await apiClient.get(`/courses/${courseId}`);
         return fallbackResponse.data;
     }
 };
@@ -34,7 +32,7 @@ export const getCourseWithSignedUrls = async (courseId, disabilityType = null) =
  * @returns {Promise<Object>} - Course data
  */
 export const getCourse = async (courseId) => {
-    const response = await axios.get(`${API_BASE_URL}/courses/${courseId}`);
+    const response = await apiClient.get(`/courses/${courseId}`);
     return response.data;
 };
 
@@ -47,8 +45,8 @@ export const getCourse = async (courseId) => {
  */
 export const getLessonSignedUrls = async (courseId, lessonIndex, mode = 'normal') => {
     try {
-        const response = await axios.get(
-            `${API_BASE_URL}/courses/${courseId}/lessons/${lessonIndex}/signed-urls`,
+        const response = await apiClient.get(
+            `/courses/${courseId}/lessons/${lessonIndex}/signed-urls`,
             { params: { mode } }
         );
         return response.data;
@@ -65,7 +63,7 @@ export const getLessonSignedUrls = async (courseId, lessonIndex, mode = 'normal'
  * @returns {Promise<Array>} - Array of courses
  */
 export const getStudentCourses = async (disabilityType, standard) => {
-    const response = await axios.get(`${API_BASE_URL}/courses/student/${disabilityType}/${standard}`);
+    const response = await apiClient.get(`/courses/student/${disabilityType}/${standard}`);
     return response.data;
 };
 
@@ -74,7 +72,7 @@ export const getStudentCourses = async (disabilityType, standard) => {
  * @returns {Promise<Array>} - Array of all courses
  */
 export const getAllCourses = async () => {
-    const response = await axios.get(`${API_BASE_URL}/courses`);
+    const response = await apiClient.get('/courses');
     return response.data;
 };
 
@@ -96,7 +94,7 @@ export const createCourse = async (formData, onProgress = null) => {
         };
     }
     
-    const response = await axios.post(`${API_BASE_URL}/courses`, formData, config);
+    const response = await apiClient.post('/courses', formData, config);
     return response.data;
 };
 
@@ -106,7 +104,7 @@ export const createCourse = async (formData, onProgress = null) => {
  * @returns {Promise<Object>} - Deletion confirmation
  */
 export const deleteCourse = async (courseId) => {
-    const response = await axios.delete(`${API_BASE_URL}/courses/${courseId}`);
+    const response = await apiClient.delete(`/courses/${courseId}`);
     return response.data;
 };
 
@@ -119,8 +117,8 @@ export const deleteCourse = async (courseId) => {
  */
 export const generateSubtitles = async (courseId, lessonId, language = null) => {
     const payload = language ? { language } : {};
-    const response = await axios.post(
-        `${API_BASE_URL}/courses/${courseId}/lessons/${lessonId}/generate-subtitles`,
+    const response = await apiClient.post(
+        `/courses/${courseId}/lessons/${lessonId}/generate-subtitles`,
         payload
     );
     return response.data;
@@ -132,7 +130,7 @@ export const generateSubtitles = async (courseId, lessonId, language = null) => 
  * @returns {Promise<Object>} - Search result with course and lesson info
  */
 export const searchCourseByLesson = async (searchTerm) => {
-    const response = await axios.get(`${API_BASE_URL}/courses/search/lesson/${encodeURIComponent(searchTerm)}`);
+    const response = await apiClient.get(`/courses/search/lesson/${encodeURIComponent(searchTerm)}`);
     return response.data;
 };
 
