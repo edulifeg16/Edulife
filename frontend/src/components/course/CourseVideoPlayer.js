@@ -15,10 +15,9 @@ const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, u
 
     // Mode: 'normal' (default) or 'cognitive' (easy mode)
     // Auto-set to cognitive if user has cognitive disability
-    const [mode, setMode] = useState(userDisabilityType === 'cognitive' ? 'cognitive' : 'normal');
+    const [mode] = useState(userDisabilityType === 'cognitive' ? 'cognitive' : 'normal');
     const [cognitiveContent, setCognitiveContent] = useState(null);
     const [subtitleUrlForMode, setSubtitleUrlForMode] = useState(null);
-    const [modeLoading, setModeLoading] = useState(false);
 
     // Utility function to convert time string to seconds
     function toSeconds(timeStr) {
@@ -83,9 +82,10 @@ const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, u
     useEffect(() => {
         if (!videoRef.current || !videoRef.current.textTracks[0]) return;
         videoRef.current.textTracks[0].mode = captionsEnabled ? 'showing' : 'hidden';
-    }, [captionsEnabled]);
+    }, [captionsEnabled, videoRef]);
 
     // Handle video timeupdate to highlight current caption
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
@@ -108,7 +108,7 @@ const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, u
 
         video.addEventListener('timeupdate', handleTimeUpdate);
         return () => video.removeEventListener('timeupdate', handleTimeUpdate);
-    }, [cues, currentCueIndex]);
+    }, [cues, currentCueIndex, videoRef]);
 
     // Voice commands: Show/Hide transcript
     useEffect(() => {

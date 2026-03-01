@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
-import { PAGES_COMMANDS } from '../../components/voice/voiceCommands';
+
 
 const findNextLessonId = (course, completedLessons = []) => {
     if (!course || !course.modules) return null;
@@ -24,8 +24,6 @@ const findNextLessonId = (course, completedLessons = []) => {
 const MobilityDashboard = () => {
     const { user } = useContext(AuthContext);
     const { theme, fontSize } = useContext(ThemeContext);
-    const [allCoursesCount, setAllCoursesCount] = useState(0);
-    const [quizzesCount, setQuizzesCount] = useState(0);
     const [lastActive, setLastActive] = useState(null);
     const [resumeLink, setResumeLink] = useState('/new-courses');
     const [loading, setLoading] = useState(true);
@@ -56,8 +54,6 @@ const MobilityDashboard = () => {
                 // Set the correct counts
                 console.log('Setting courses count:', filteredCourses.length);
                 console.log('Setting quizzes count:', quizzes.length);
-                setAllCoursesCount(filteredCourses.length);
-                setQuizzesCount(quizzes.length);
 
                 const progress = userRes.data.courseProgress || [];
 

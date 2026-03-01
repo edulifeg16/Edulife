@@ -25,9 +25,6 @@ const findNextLessonId = (course, completedLessons = []) => {
 const HearingDashboard = () => {
     const { user } = useContext(AuthContext);
     const { theme, fontSize } = useContext(ThemeContext);
-    const [allCoursesCount, setAllCoursesCount] = useState(0);
-    const [allQuizzesCount, setAllQuizzesCount] = useState(0);
-    const [completedCount, setCompletedCount] = useState(0);
     const [lastActive, setLastActive] = useState(null);
     const [resumeLink, setResumeLink] = useState('/new-courses');
     const [loading, setLoading] = useState(true);
@@ -38,27 +35,15 @@ const HearingDashboard = () => {
 
         const fetchData = async () => {
             try {
-                const [coursesRes, quizzesRes, userRes] = await Promise.all([
+                const [, , userRes] = await Promise.all([
                     api.get(`/courses/student/${user.disabilityType}/${user.standard}`),
                     api.get(`/quizzes`),
                     api.get(`/users/${userId}`)
                 ]);
 
-                // Filter courses by disability type
-                const filteredCourses = (coursesRes.data || []).filter(
-                    course => course.disabilityType === 'hearing'
-                );
-
-                // Quizzes are now universal - no disability filtering needed
-                const allQuizzes = quizzesRes.data || [];
-
                 // Set count for courses and all quizzes
-                setAllCoursesCount(filteredCourses.length);
-                setAllQuizzesCount(allQuizzes.length);
 
                 const progress = userRes.data.courseProgress || [];
-                const completed = progress.filter(p => p.status === 'complete').length;
-                setCompletedCount(completed);
 
                 let last = progress.find(p => p.status === 'ongoing' || p.status === 'incomplete');
 

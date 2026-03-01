@@ -6,7 +6,6 @@ import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import VisualScreenReader from "../../components/accessibility/VisualScreenReader";
-import VisualVoiceAssistant from "../../components/voice/VisualVoiceAssistant";
 
 const findNextLessonId = (course, completedLessons = []) => {
     if (!course || !course.modules) return null;
@@ -26,9 +25,6 @@ const findNextLessonId = (course, completedLessons = []) => {
 const VisualDashboard = () => {
     const { user } = useContext(AuthContext);
     const { theme, fontSize } = useContext(ThemeContext);
-    const [allCoursesCount, setAllCoursesCount] = useState(0);
-    const [allQuizzesCount, setAllQuizzesCount] = useState(0);
-    const [completedCount, setCompletedCount] = useState(0);
     const [lastActive, setLastActive] = useState(null);
     const [resumeLink, setResumeLink] = useState('/new-courses');
     const [loading, setLoading] = useState(true);
@@ -39,25 +35,13 @@ const VisualDashboard = () => {
 
         const fetchData = async () => {
             try {
-                const [coursesRes, quizzesRes, userRes] = await Promise.all([
+                const [, , userRes] = await Promise.all([
                     api.get(`/courses/student/${user.disabilityType}/${user.standard}`),
                     api.get(`/quizzes`),
                     api.get(`/users/${userId}`)
                 ]);
 
-                const filteredCourses = (coursesRes.data || []).filter(
-                    course => course.disabilityType === 'visual'
-                );
-
-                // Quizzes are now universal - no disability filtering needed
-                const allQuizzes = quizzesRes.data || [];
-
-                setAllCoursesCount(filteredCourses.length);
-                setAllQuizzesCount(allQuizzes.length);
-
                 const progress = userRes.data.courseProgress || [];
-                const completed = progress.filter(p => p.status === 'complete').length;
-                setCompletedCount(completed);
 
                 let last = progress.find(p => p.status === 'ongoing' || p.status === 'incomplete');
 

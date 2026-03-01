@@ -112,11 +112,13 @@ const VisualVoiceAssistant = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getLessonTitle = (subject, index) => {
     const course = findCourseBySubject(subject);
     return course?.lessons?.[index]?.title || null;
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getFormattedLessonList = (subject) => {
     const course = findCourseBySubject(subject);
     if (!course?.lessons) return [];
@@ -597,7 +599,7 @@ const VisualVoiceAssistant = () => {
                 for (const el of scoreElements) {
                   const text = el.textContent.trim();
                   // Look for patterns like "3/5" or "3 / 5" or "3 out of 5"
-                  const numericMatch = text.match(/(\d+)\s*[\/]\s*(\d+)/);
+                  const numericMatch = text.match(/(\d+)\s*[/]\s*(\d+)/);
                   const wordMatch = text.match(/(\d+)\s*out\s*of\s*(\d+)/i);
                   
                   if (numericMatch && text.length < 50) {
@@ -938,7 +940,8 @@ const VisualVoiceAssistant = () => {
     if (!mode && (cmd.includes("help") || cmd.includes("what"))) {
       speak("Say three to open new courses.");
     }
-  }, [mode, navigate, pendingSubject, askContinueLesson, location.pathname]); // add location to deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, navigate, pendingSubject, askContinueLesson, location.pathname]);
 
   // --------------------------------------------------------
   // TRANSCRIPT HANDLER  (debounced + dedup + speaking-guard)
@@ -1049,6 +1052,7 @@ const VisualVoiceAssistant = () => {
         () => startMic()
       );
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
   if (!user || user.disabilityType !== "visual") return null;

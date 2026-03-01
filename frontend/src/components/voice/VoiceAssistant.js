@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, MicOff } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
-import { HELP_COMMANDS, PAGES_COMMANDS } from './voiceCommands';
+import { PAGES_COMMANDS } from './voiceCommands';
 import { API_BASE_URL } from '../../api/apiConfig';
 
 const VoiceAssistant = () => {

@@ -5,7 +5,7 @@
  * including support for S3 signed URLs.
  */
 
-import { apiClient, API_BASE_URL } from './apiConfig';
+import { apiClient } from './apiConfig';
 
 /**
  * Get a course by ID with signed URLs for video playback
