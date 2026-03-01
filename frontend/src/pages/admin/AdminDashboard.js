@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
@@ -33,7 +33,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/admin/stats');
+                const res = await api.get('/admin/stats');
                 setStats(res.data);
             } catch (error) {
                 console.error("Failed to fetch stats", error);

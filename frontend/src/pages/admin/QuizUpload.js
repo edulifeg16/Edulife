@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
@@ -28,7 +28,7 @@ const QuizUpload = () => {
     useEffect(() => {
         const fetchCourses = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/courses');
+                const res = await api.get('/courses');
                 setCourses(res.data);
             } catch (error) {
                 console.error("Failed to fetch courses", error);
@@ -110,7 +110,7 @@ const QuizUpload = () => {
         }
         setMessage('');
         try {
-            await axios.post('http://localhost:5000/api/quizzes', quizData);
+            await api.post('/quizzes', quizData);
             setMessage('Quiz uploaded successfully!');
             setTimeout(() => navigate('/admin/quiz-list'), 1500);
         } catch (error) {

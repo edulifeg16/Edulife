@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { Link } from 'react-router-dom';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
@@ -32,7 +32,7 @@ const CoursesHistory = () => {
         if (user) {
             const fetchCourses = async () => {
                 try {
-                    const res = await axios.get(`http://localhost:5000/api/courses/student/${user.disabilityType}/${user.standard}`);
+                    const res = await api.get(`/courses/student/${user.disabilityType}/${user.standard}`);
                     // For now, we assume all assigned courses are "Ongoing"
                     setCourses(res.data);
                 } catch (error) {

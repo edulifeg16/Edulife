@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useRef } from 'react'; 
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { AuthContext } from '../../context/AuthContext';
 
 const Chatbot = () => {
@@ -69,7 +69,7 @@ const Chatbot = () => {
         setIsLoading(true);
 
         try {
-            const res = await axios.post('http://localhost:5000/api/chatbot/query', { message: voiceText });
+            const res = await api.post('/chatbot/query', { message: voiceText });
             const botMessage = { from: 'bot', text: res.data.reply };
             setMessages(prev => [...prev, botMessage]);
             // Speak the bot's response
@@ -314,7 +314,7 @@ const Chatbot = () => {
         setIsLoading(true);
 
         try {
-            const res = await axios.post('http://localhost:5000/api/chatbot/query', { message: currentInput });
+            const res = await api.post('/chatbot/query', { message: currentInput });
             const botMessage = { from: 'bot', text: res.data.reply };
             setMessages(prev => [...prev, botMessage]);
             // Speak the bot's response

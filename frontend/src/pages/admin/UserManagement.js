@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
 const UserManagement = () => {
@@ -10,7 +10,7 @@ const UserManagement = () => {
     // Function to fetch all users
     const fetchUsers = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/admin/users');
+            const response = await api.get('/admin/users');
             setUsers(response.data);
         } catch (err) {
             setError('Failed to fetch users.');
@@ -27,7 +27,7 @@ const UserManagement = () => {
     const handleDelete = async (userId) => {
         if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
             try {
-                await axios.delete(`http://localhost:5000/api/admin/users/${userId}`);
+                await api.delete(`/admin/users/${userId}`);
                 // Refresh the user list after deletion
                 fetchUsers();
             } catch (err) {

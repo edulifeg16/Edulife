@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
@@ -18,7 +18,7 @@ const QuizzesHistory = () => {
         }
         const fetchHistory = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/users/${userId}/quiz-history`);
+                const res = await api.get(`/users/${userId}/quiz-history`);
                 setHistory(res.data);
             } catch (error) {
                 console.error("Failed to fetch quiz history", error);

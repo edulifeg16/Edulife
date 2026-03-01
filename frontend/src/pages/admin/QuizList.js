@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
 const QuizList = () => {
@@ -8,7 +8,7 @@ const QuizList = () => {
 
     const fetchQuizzes = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/quizzes');
+            const response = await api.get('/quizzes');
             setQuizzes(response.data);
         } catch (err) {
             console.error("Failed to fetch quizzes", err);
@@ -24,7 +24,7 @@ const QuizList = () => {
     const handleDelete = async (quizId, title) => {
         if (window.confirm(`Are you sure you want to delete the quiz: ${title}?`)) {
             try {
-                await axios.delete(`http://localhost:5000/api/quizzes/${quizId}`);
+                await api.delete(`/quizzes/${quizId}`);
                 alert('Quiz deleted successfully!');
                 fetchQuizzes(); // Refresh the list
             } catch (err) {

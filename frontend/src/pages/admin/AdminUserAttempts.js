@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
 const AdminUserAttempts = () => {
@@ -14,7 +14,7 @@ const AdminUserAttempts = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/users/${id}`);
+                const res = await api.get(`/users/${id}`);
                 setUser(res.data);
                 // load quiz titles for any quizIds that are objects or ids
                 const idsToFetch = new Set();
@@ -27,7 +27,7 @@ const AdminUserAttempts = () => {
                     const titles = {};
                     await Promise.all(Array.from(idsToFetch).map(async (qid) => {
                         try {
-                            const r = await axios.get(`http://localhost:5000/api/quizzes/${qid}`);
+                            const r = await api.get(`/quizzes/${qid}`);
                             titles[qid] = r.data.title;
                         } catch (e) {
                             // ignore

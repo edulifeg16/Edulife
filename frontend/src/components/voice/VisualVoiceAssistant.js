@@ -1,4 +1,4 @@
-﻿// VisualVoiceAssistant.js
+// VisualVoiceAssistant.js
 
 import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -18,7 +18,7 @@ const VisualVoiceAssistant = () => {
   const chatbotHandoffRef = useRef(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   // --- Refs for reliable voice-command gating (no async state lag) ---
   const isSpeakingRef = useRef(false);
@@ -209,6 +209,13 @@ const VisualVoiceAssistant = () => {
       let questionTextEl = document.querySelector("[data-testid='quiz-question-text']");
       let optionEls = Array.from(document.querySelectorAll("[data-testid^='quiz-option-']"));
 
+      // Check if this is the last question by looking for submit button instead of next button
+      const buttons = Array.from(document.querySelectorAll("button"));
+      const nextButton = buttons.find(btn => btn.textContent.toLowerCase().includes("next"));
+      const submitButton = buttons.find(btn => btn.textContent.toLowerCase().includes("submit") || btn.textContent.toLowerCase().includes("finish"));
+      const isLastQuestion = !nextButton && submitButton;
+      window.__isLastQuestion = isLastQuestion;
+
       // Fallback: if data attributes not found, use DOM selectors
       if (!questionTextEl) {
         // Try common quiz question container patterns
@@ -241,6 +248,7 @@ const VisualVoiceAssistant = () => {
         questionFound: !!questionTextEl, 
         optionsFound: optionEls.length,
         questionText: questionTextEl?.textContent?.substring(0, 50),
+        isLastQuestion: isLastQuestion,
         retries: retries
       });
 
@@ -310,7 +318,7 @@ const VisualVoiceAssistant = () => {
       stopMic();
       // Wait for screen reader to finish, then start mic
       setTimeout(() => {
-        speak("Welcome to visual dashboard This dashboard is designed for visually impaired students. Use voice control to navigate. Example: say 1-Dashboard,2-Profile,3-New courses,4-Courses History,5-Quizzes History,6-Settings,7-Logout. After you say these, the assistant will navigate you", () => startMic());
+        speak("Welcome to visual dashboard This dashboard is designed for visually impaired students. Use voice control to navigate. Example: say 1-Dashboard,2-Profile,3-New courses,4-Courses History,5-Quizzes History,6-Settings,7-Logout and say open chatbot for ai assistant. To use chatbot use commands: open chatbot,talk to chatbot and close chatbot. After you say these, the assistant will navigate you. For better experience headphones are recommended.", () => startMic());
       }, 1500);
     } else if (p === "/new-courses") setMode("subjects");
     else if (p === "/courses-history") {
@@ -410,7 +418,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 0;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 0 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option A selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option A selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -420,7 +429,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 1;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 1 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option B selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option B selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -430,7 +440,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 2;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 2 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option C selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option C selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -440,7 +451,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 3;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 3 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option D selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option D selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -452,7 +464,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 0;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 0 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option A selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option A selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -463,7 +476,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 1;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 1 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option B selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option B selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -474,7 +488,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 2;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 2 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option C selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option C selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -485,7 +500,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 3;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 3 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option D selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option D selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -496,7 +512,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 0;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 0 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option A selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option A selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -505,7 +522,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 1;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 1 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option B selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option B selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -514,7 +532,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 2;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 2 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option C selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option C selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -523,7 +542,8 @@ const VisualVoiceAssistant = () => {
         window.__selectedOption = 3;
         window.dispatchEvent(new CustomEvent("voice-select-option", { detail: 3 }));
         try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-        speak("Option D selected. Say yes to submit, or next for next question.", () => {
+        const instruction = window.__isLastQuestion ? "Say yes to submit." : "Say yes to submit, or next for next question.";
+        speak(`Option D selected. ${instruction}`, () => {
           restartMic()
         });
         return;
@@ -532,15 +552,22 @@ const VisualVoiceAssistant = () => {
       // NEXT -> move to next question
       if (cmd.includes("next") || cmd.includes("continue")) {
         if (window.__selectedOption != null) {
-          try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-          window.dispatchEvent(new Event("voice-next-question"));
-          speak("Moving to next question.", () => {
-            // Wait for next question to load, then read it
-            setTimeout(() => {
-              window.__quizVoiceInit = false;
-              readQuizQuestion();
-            }, 500);
-          });
+          if (window.__isLastQuestion) {
+            try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
+            speak("This is the last question. Say yes to submit the quiz.", () => {
+              restartMic()
+            });
+          } else {
+            try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
+            window.dispatchEvent(new Event("voice-next-question"));
+            speak("Moving to next question.", () => {
+              // Wait for next question to load, then read it
+              setTimeout(() => {
+                window.__quizVoiceInit = false;
+                readQuizQuestion();
+              }, 500);
+            });
+          }
         } else {
           try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
           speak("No option selected. Say the option letter first.", () => {
@@ -554,12 +581,58 @@ const VisualVoiceAssistant = () => {
       if (cmd.includes("yes") || cmd.includes("submit")) {
         if (window.__selectedOption != null) {
           try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
-          // notify quiz UI
+          // notify quiz UI to select the option
           window.dispatchEvent(new CustomEvent("voice-select-option", { detail: window.__selectedOption }));
-          window.dispatchEvent(new Event("voice-submit-quiz"));
-          speak("Submitting your quiz.", () => {
-            // After submit, quiz will navigate away, so don't restart mic
-          });
+          
+          // If it's the last question, submit the entire quiz
+          if (window.__isLastQuestion) {
+            window.dispatchEvent(new Event("voice-submit-quiz"));
+            speak("Submitting your quiz. Please wait for results.", () => {
+              // Wait for results page to load and announce marks
+              setTimeout(() => {
+                // Try to find score/marks on the page - look for numeric pattern only
+                const scoreElements = Array.from(document.querySelectorAll("h1, h2, h3, p, div, span"));
+                let scoreMatch = null;
+                
+                for (const el of scoreElements) {
+                  const text = el.textContent.trim();
+                  // Look for patterns like "3/5" or "3 / 5" or "3 out of 5"
+                  const numericMatch = text.match(/(\d+)\s*[\/]\s*(\d+)/);
+                  const wordMatch = text.match(/(\d+)\s*out\s*of\s*(\d+)/i);
+                  
+                  if (numericMatch && text.length < 50) {
+                    scoreMatch = `${numericMatch[1]} out of ${numericMatch[2]}`;
+                    break;
+                  } else if (wordMatch && text.length < 50) {
+                    scoreMatch = `${wordMatch[1]} out of ${wordMatch[2]}`;
+                    break;
+                  }
+                }
+                
+                if (scoreMatch) {
+                  speak(`Quiz completed. You scored ${scoreMatch}.`, () => {
+                    setMode("");
+                    restartMic();
+                  });
+                } else {
+                  speak("Quiz completed.", () => {
+                    setMode("");
+                    restartMic();
+                  });
+                }
+              }, 2000);
+            });
+          } else {
+            // Not the last question, move to next question
+            window.dispatchEvent(new Event("voice-next-question"));
+            speak("Answer submitted. Loading next question.", () => {
+              setTimeout(() => {
+                window.__quizVoiceInit = false;
+                window.__selectedOption = null;
+                readQuizQuestion();
+              }, 500);
+            });
+          }
         } else {
           try { SpeechRecognition.stopListening(); setListening(false); } catch (e) {}
           speak("No option selected. Say the option letter first.", () => {
@@ -592,6 +665,7 @@ const VisualVoiceAssistant = () => {
     // ------------------------------------------------------
     if (
       mode === "lessons" &&
+      !askContinueLesson &&
       (cmd.includes("quiz") || cmd.includes("take quiz") || cmd.includes("take the quiz"))
     ) {
       stopMic();
@@ -619,9 +693,9 @@ const VisualVoiceAssistant = () => {
     // Prevent mis-detection: do not run global nav if the user said 'quiz'
     if (cmd.includes("quiz")) return;
 
-    // GLOBAL NAVIGATION (1â€“8)
+    // GLOBAL NAVIGATION (1–8) - Skip if in subjects or subject-lessons mode
     const num = extractNumber(cmd);
-    if (num && num >= 1 && num <= 8 && !cmd.includes("unit") && !cmd.includes("lesson")) {
+    if (num && num >= 1 && num <= 8 && !cmd.includes("unit") && !cmd.includes("lesson") && mode !== "subjects" && mode !== "subject-lessons") {
       const actions = {
         1: () => navigate("/dashboard/visual"),
         2: () => navigate("/profile"),
@@ -629,10 +703,28 @@ const VisualVoiceAssistant = () => {
         4: () => navigate("/courses-history"),
         5: () => navigate("/quizzes-history"),
         6: () => navigate("/settings"),
-        7: () => window.dispatchEvent(new CustomEvent("voice-logout-request")),
+        7: () => {
+          stopMic();
+          speak("Logging out.", () => {
+            // Navigate to home before logging out to avoid component errors
+            navigate("/");
+            setTimeout(() => {
+              if (typeof logout === 'function') {
+                logout();
+              } else {
+                window.dispatchEvent(new CustomEvent("voice-logout-request"));
+              }
+            }, 300);
+          });
+        },
         8: () => speak("Help. Say a number between one and eight.")
       };
-      speak(`Opening option ${num}`, actions[num]);
+      
+      if (num === 7) {
+        actions[7]();
+      } else {
+        speak(`Opening option ${num}`, actions[num]);
+      }
       return;
     }
 
@@ -718,9 +810,39 @@ const VisualVoiceAssistant = () => {
     if (mode === "lessons") {
       if (askContinueLesson) {
         if (cmd.includes("yes") || cmd.includes("continue") || cmd.includes("play")) {
-          speak("Continuing the lesson", () => {
-            window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
-          });
+          stopMic();
+          const video = document.querySelector("video");
+          if (video) {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  speak("Video playing", () => {
+                    window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+                    restartMic();
+                  });
+                })
+                .catch((error) => {
+                  console.log("Autoplay prevented:", error);
+                  // Click the video to enable autoplay
+                  video.click();
+                  speak("Video ready. Please click anywhere on screen to start playback.", () => {
+                    window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+                    restartMic();
+                  });
+                });
+            } else {
+              speak("Starting the video", () => {
+                window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+                restartMic();
+              });
+            }
+          } else {
+            speak("Video not found", () => {
+              window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+              restartMic();
+            });
+          }
           setAskContinueLesson(false);
           return;
         }
@@ -757,16 +879,58 @@ const VisualVoiceAssistant = () => {
         return;
       }
 
-      if (cmd.includes("continue")) {
-        speak("Continuing", () =>
-          window.dispatchEvent(new CustomEvent("voice-continue-lesson"))
-        );
+      if (cmd.includes("continue") || cmd.includes("play")) {
+        stopMic();
+        const video = document.querySelector("video");
+        if (video) {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                speak("Video playing", () => {
+                  window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+                  restartMic();
+                });
+              })
+              .catch((error) => {
+                console.log("Autoplay prevented:", error);
+                // Click the video to enable autoplay
+                video.click();
+                speak("Video ready. Please click anywhere on screen to start playback.", () => {
+                  window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+                  restartMic();
+                });
+              });
+          } else {
+            speak("Playing video", () => {
+              window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+              restartMic();
+            });
+          }
+        } else {
+          speak("Video not found", () => {
+            window.dispatchEvent(new CustomEvent("voice-continue-lesson"));
+            restartMic();
+          });
+        }
         return;
       }
 
       if (cmd.includes("pause") || cmd.includes("stop")) {
-        window.dispatchEvent(new CustomEvent("voice-pause-lesson"));
-        speak("Paused");
+        stopMic();
+        const video = document.querySelector("video");
+        if (video) {
+          video.pause();
+          speak("Video stopped", () => {
+            window.dispatchEvent(new CustomEvent("voice-pause-lesson"));
+            restartMic();
+          });
+        } else {
+          speak("No video found", () => {
+            window.dispatchEvent(new CustomEvent("voice-pause-lesson"));
+            restartMic();
+          });
+        }
         return;
       }
     }

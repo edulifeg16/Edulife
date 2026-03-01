@@ -11,7 +11,18 @@ const app = express();
 connectDB();
 
 // Init Middleware
-app.use(cors()); // Allows requests from our frontend
+// CORS configuration for frontend (Vercel) and local development
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    /\.vercel\.app$/,  // Allow all vercel.app subdomains
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions)); // Allows requests from our frontend
 app.use(express.json({ extended: false })); // Allows us to accept JSON data in the body
 app.use(express.static('public'));
 // Define Routes

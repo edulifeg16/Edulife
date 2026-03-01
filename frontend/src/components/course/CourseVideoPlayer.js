@@ -1,7 +1,7 @@
 // src/components/course/CourseVideoPlayer.js
 
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import axios from 'axios';
+import api, { SERVER_BASE_URL } from '../../api/apiConfig';
 import { ThemeContext } from '../../context/ThemeContext'; // We need this for the global caption toggle
 
 const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, userDisabilityType, videoRef }) => {
@@ -41,7 +41,7 @@ const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, u
             return url;
         }
         // Otherwise, it's a local path - prepend server URL
-        return `http://localhost:5000${url}`;
+        return `${SERVER_BASE_URL}${url}`;
     };
 
     // Get the correct video URL based on user disability type
@@ -169,9 +169,10 @@ const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, u
             setCues([]);
             if (!fullCaptionUrl) return;
             try {
-                const res = await axios.get(fullCaptionUrl, { responseType: 'text' });
+                const res = await fetch(fullCaptionUrl);
                 if (cancelled) return;
-                const parsed = parseVTT(res.data || res);
+                const text = await res.text();
+                const parsed = parseVTT(text);
                 setCues(parsed);
             } catch (err) {
                 console.warn('Failed to load VTT', err);
@@ -199,7 +200,7 @@ const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, u
     useEffect(() => {
         // For cognitive users with simplified subtitles, use those
         if (userDisabilityType === 'cognitive' && lesson?.cognitiveMode?.simplifiedSubtitlesUrl) {
-            const simplifiedUrl = `http://localhost:5000${lesson.cognitiveMode.simplifiedSubtitlesUrl}`;
+            const simplifiedUrl = `${SERVER_BASE_URL}${lesson.cognitiveMode.simplifiedSubtitlesUrl}`;
             setSubtitleUrlForMode(simplifiedUrl);
         } else {
             // Otherwise use the regular caption URL
@@ -289,8 +290,8 @@ const CourseVideoPlayer = ({ lesson, courseId, onUpdateLesson, disabilityType, u
                             const payload = {};
                             if (lesson?.language) payload.language = lesson.language;
                             
-                            const resp = await axios.post(
-                                `http://localhost:5000/api/courses/${courseId}/lessons/${lesson._id}/generate-subtitles`,
+                            const resp = await api.post(
+                                `/courses/${courseId}/lessons/${lesson._id}/generate-subtitles`,
                                 payload,
                                 {
                                     headers: {

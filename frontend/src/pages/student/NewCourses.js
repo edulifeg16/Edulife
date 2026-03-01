@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react'; 
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { Link } from 'react-router-dom';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
@@ -246,7 +246,7 @@ const NewCourses = () => {
       const fetchCourses = async () => {
         try {
           console.log(`📚 Fetching courses for: ${user.disabilityType}, Standard: ${user.standard}`);
-          const res = await axios.get(`http://localhost:5000/api/courses/student/${user.disabilityType}/${user.standard}`);
+          const res = await api.get(`/courses/student/${user.disabilityType}/${user.standard}`);
           console.log('📚 Courses fetched:', res.data);
           if (Array.isArray(res.data)) {
             setCourses(res.data);

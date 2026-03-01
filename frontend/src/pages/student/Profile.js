@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../api/apiConfig';
 import '../../index.css'; // Ensure styles are applied
 
 const Profile = () => {
@@ -95,7 +96,7 @@ const Profile = () => {
                       const userId = user?._id || user?.id;
                       if (!userId) throw new Error('User id not available');
                       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-                      const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                      const res = await fetch(`${API_BASE_URL}/users/${userId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', ...headers },
                         body: JSON.stringify(form)

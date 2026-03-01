@@ -4,6 +4,7 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import { Mic, MicOff } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { HELP_COMMANDS, PAGES_COMMANDS } from './voiceCommands';
+import { API_BASE_URL } from '../../api/apiConfig';
 
 const VoiceAssistant = () => {
   const [listening, setListening] = useState(false);
@@ -471,7 +472,7 @@ const VoiceAssistant = () => {
         if (location.pathname === '/courses-history') {
           try {
             logVoice('Searching for lesson on courses history page', { lessonName });
-            const searchUrl = `http://localhost:5000/api/courses/search/lesson/${encodeURIComponent(lessonName)}`;
+            const searchUrl = `${API_BASE_URL}/courses/search/lesson/${encodeURIComponent(lessonName)}`;
             const searchResponse = await fetch(searchUrl);
             
             if (searchResponse.ok) {

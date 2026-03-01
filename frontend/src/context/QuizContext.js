@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/apiConfig";
 
 export const QuizContext = createContext();
 
@@ -9,7 +9,7 @@ export const QuizProvider = ({ children }) => {
   useEffect(() => {
     const loadQuizzes = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/quizzes");
+        const res = await api.get("/quizzes");
         setQuizzes(res.data);
         window.__EDULIFE_QUIZZES__ = res.data;
       } catch (err) {

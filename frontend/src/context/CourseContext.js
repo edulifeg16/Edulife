@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/apiConfig";
 
 export const CourseContext = createContext();
 
@@ -9,7 +9,7 @@ export const CourseProvider = ({ children }) => {
   useEffect(() => {
     const loadCourses = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/courses");
+        const res = await api.get("/courses");
         setCourses(res.data);
 
         // Make a safe global for old voice assistant code

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { Link } from 'react-router-dom';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
@@ -39,9 +39,9 @@ const MobilityDashboard = () => {
         const fetchData = async () => {
             try {
                 const [coursesRes, quizzesRes, userRes] = await Promise.all([
-                    axios.get(`http://localhost:5000/api/courses/student/${user.disabilityType}/${user.standard}`),
-                    axios.get(`http://localhost:5000/api/quizzes`),
-                    axios.get(`http://localhost:5000/api/users/${user._id}`)
+                    api.get(`/courses/student/${user.disabilityType}/${user.standard}`),
+                    api.get(`/quizzes`),
+                    api.get(`/users/${user._id}`)
                 ]);
 
                 // Filter courses for mobility

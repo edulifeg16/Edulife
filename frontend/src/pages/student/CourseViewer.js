@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
 import CourseVideoPlayer from '../../components/course/CourseVideoPlayer';
@@ -149,7 +149,7 @@ const CourseViewer = () => {
         if (initialLesson) setSelectedLesson(initialLesson);
 
         // ✅ Fetch quizzes safely (check if courseId exists)
-        const quizRes = await axios.get(`http://localhost:5000/api/quizzes`);
+        const quizRes = await api.get(`/quizzes`);
         const validQuiz = quizRes.data.find(
           (q) =>
             q.courseId && // make sure courseId is not null
@@ -172,8 +172,8 @@ const CourseViewer = () => {
 
     const markStarted = async () => {
       try {
-        await axios.post(`http://localhost:5000/api/users/${userId}/course-start`, { courseId });
-        const updated = await axios.get(`http://localhost:5000/api/users/${userId}`);
+        await api.post(`/users/${userId}/course-start`, { courseId });
+        const updated = await api.get(`/users/${userId}`);
         login(updated.data, token);
       } catch (e) {
         console.warn('⚠️ Failed to mark course started', e);
@@ -196,8 +196,8 @@ const CourseViewer = () => {
     if (isLastLesson(selectedLesson._id)) {
       (async () => {
         try {
-          await axios.post(`http://localhost:5000/api/users/${userId}/course-complete`, { courseId });
-          const updated = await axios.get(`http://localhost:5000/api/users/${userId}`);
+          await api.post(`/users/${userId}/course-complete`, { courseId });
+          const updated = await api.get(`/users/${userId}`);
           login(updated.data, token);
         } catch (e) {
           console.warn('⚠️ Failed to mark course complete', e);

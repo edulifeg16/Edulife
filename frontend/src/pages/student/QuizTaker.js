@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { AuthContext } from '../../context/AuthContext';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 
@@ -23,7 +23,7 @@ const QuizTaker = () => {
         const fetchQuiz = async () => {
             try {
                 console.log('🎯 QuizTaker: Fetching quiz', { quizId });
-                const res = await axios.get(`http://localhost:5000/api/quizzes/${quizId}`);
+                const res = await api.get(`/quizzes/${quizId}`);
                 console.log('🎯 QuizTaker: Quiz fetched successfully', { 
                     quizTitle: res.data.title,
                     questionsCount: res.data.questions?.length,
@@ -50,7 +50,7 @@ const QuizTaker = () => {
         finalAnswers[currentQuestionIndex] = selectedOption;
 
         try {
-            const res = await axios.post('http://localhost:5000/api/quizzes/submit', {
+            const res = await api.post('/quizzes/submit', {
                 quizId,
                 userId: user.id,
                 answers: finalAnswers

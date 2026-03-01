@@ -7,20 +7,26 @@
 
 import axios from 'axios';
 
-// Base API URL - can be overridden with environment variable
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Base URL for the backend server (without /api)
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
+// Base API URL - for API endpoints
+export const API_BASE_URL = `${BASE_URL}/api`;
+
+// Server base URL - for static files, uploads, etc.
+export const SERVER_BASE_URL = BASE_URL;
 
 // Create a pre-configured axios instance
-export const apiClient = axios.create({
+const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000, // 10 second timeout
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Request interceptor to add auth token if available
-apiClient.interceptors.request.use(
+// Request interceptor to add auth token dynamically
+api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -34,7 +40,7 @@ apiClient.interceptors.request.use(
 );
 
 // Response interceptor for handling common errors
-apiClient.interceptors.response.use(
+api.interceptors.response.use(
     (response) => {
         return response;
     },
@@ -50,4 +56,7 @@ apiClient.interceptors.response.use(
     }
 );
 
-export default apiClient;
+// Keep apiClient as alias for backward compatibility
+export const apiClient = api;
+
+export default api;

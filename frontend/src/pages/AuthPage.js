@@ -1,10 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/apiConfig';
 import { AuthContext } from '../context/AuthContext';
 import '../index.css'; // Ensure styles are applied
-
-const API_URL = 'http://localhost:5000/api/auth'; // Your backend URL
 
 const AuthPage = () => {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -34,7 +32,7 @@ const AuthPage = () => {
     setError('');
     try {
       // This part must use the correct state variables
-      const res = await axios.post(`${API_URL}/login`, { 
+      const res = await api.post('/auth/login', { 
         email: loginEmail, 
         password: loginPassword 
       });
@@ -66,8 +64,8 @@ const AuthPage = () => {
         standard: parseInt(formData.standard),
         disabilityType: formData.disabilityType,
       };
-      await axios.post(`${API_URL}/register`, registerData);
-      const res = await axios.post(`${API_URL}/login`, { email: formData.email, password: formData.password });
+      await api.post('/auth/register', registerData);
+      const res = await api.post('/auth/login', { email: formData.email, password: formData.password });
       login(res.data.user, res.data.token);
       navigate('/dashboard');
     } catch (err) {

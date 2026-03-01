@@ -1,6 +1,6 @@
 // /src/pages/student/VisualDashboard.js
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { Link } from 'react-router-dom';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
@@ -40,9 +40,9 @@ const VisualDashboard = () => {
         const fetchData = async () => {
             try {
                 const [coursesRes, quizzesRes, userRes] = await Promise.all([
-                    axios.get(`http://localhost:5000/api/courses/student/${user.disabilityType}/${user.standard}`),
-                    axios.get(`http://localhost:5000/api/quizzes`),
-                    axios.get(`http://localhost:5000/api/users/${userId}`)
+                    api.get(`/courses/student/${user.disabilityType}/${user.standard}`),
+                    api.get(`/quizzes`),
+                    api.get(`/users/${userId}`)
                 ]);
 
                 const filteredCourses = (coursesRes.data || []).filter(
@@ -73,7 +73,7 @@ const VisualDashboard = () => {
                         courseObj = last.courseId;
                     } else if (typeof last.courseId === 'string') {
                         try {
-                            const courseRes = await axios.get(`http://localhost:5000/api/courses/${last.courseId}`);
+                            const courseRes = await api.get(`/courses/${last.courseId}`);
                             courseObj = courseRes.data;
                         } catch (e) {
                             console.error('Failed to fetch last active course', e);
@@ -115,7 +115,7 @@ const VisualDashboard = () => {
                 <p>
                     Welcome, {user?.name}! This dashboard is designed for visually impaired students.
                     Use voice control to navigate. Example: say <strong>1-Dashboard,2-Profile,3-New courses,4-Courses History,5-Quizzes History,6-Settings,7-Logout</strong>.
-                    After you say these, the assistant will navigate you"
+                    After you say these, the assistant will navigate you. To use chatbot use commands: open chatbot,talk to chatbot and close chatbot.<strong>For better experience headphones are recommended."</strong>
                 </p>
 
                 {/* <div style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap' }}>

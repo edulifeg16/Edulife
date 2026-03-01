@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { Link } from 'react-router-dom';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
@@ -62,8 +62,8 @@ const Quizzes = () => {
                 try {
                     // Step 1: Fetch both datasets in parallel
                     const [quizzesRes, historyRes] = await Promise.all([
-                        axios.get('http://localhost:5000/api/quizzes'),
-                        axios.get(`http://localhost:5000/api/users/${userId}/quiz-history`)
+                        api.get('/quizzes'),
+                        api.get(`/users/${userId}/quiz-history`)
                     ]);
                     
                     const allQuizzes = quizzesRes.data || [];

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
@@ -69,7 +69,7 @@ const CourseUpload = () => {
         });
         
         try {
-            await axios.post('http://localhost:5000/api/courses', formData, {
+            await api.post('/courses', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setMessage('Course uploaded successfully!');

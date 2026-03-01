@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import { Link } from 'react-router-dom';
 import StudentSidebar from '../../components/layout/StudentSidebar';
 import { AuthContext } from '../../context/AuthContext';
@@ -39,9 +39,9 @@ const HearingDashboard = () => {
         const fetchData = async () => {
             try {
                 const [coursesRes, quizzesRes, userRes] = await Promise.all([
-                    axios.get(`http://localhost:5000/api/courses/student/${user.disabilityType}/${user.standard}`),
-                    axios.get(`http://localhost:5000/api/quizzes`),
-                    axios.get(`http://localhost:5000/api/users/${userId}`)
+                    api.get(`/courses/student/${user.disabilityType}/${user.standard}`),
+                    api.get(`/quizzes`),
+                    api.get(`/users/${userId}`)
                 ]);
 
                 // Filter courses by disability type
@@ -76,7 +76,7 @@ const HearingDashboard = () => {
                     } else if (typeof last.courseId === 'string') {
                         // fetch the course to inspect modules and lessons
                         try {
-                            const courseRes = await axios.get(`http://localhost:5000/api/courses/${last.courseId}`);
+                            const courseRes = await api.get(`/courses/${last.courseId}`);
                             courseObj = courseRes.data;
                         } catch (e) {
                             console.error('Failed to fetch last active course', e);

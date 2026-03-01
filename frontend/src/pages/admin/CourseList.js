@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/apiConfig';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
 const CourseList = () => {
@@ -9,7 +9,7 @@ const CourseList = () => {
 
     const fetchCourses = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/courses');
+            const response = await api.get('/courses');
             setCourses(response.data);
             setLoading(false);
         } catch (err) {
@@ -25,7 +25,7 @@ const CourseList = () => {
     const handleDelete = async (courseId, subject) => {
         if (window.confirm(`Are you sure you want to delete the course: ${subject}?`)) {
             try {
-                await axios.delete(`http://localhost:5000/api/courses/${courseId}`);
+                await api.delete(`/courses/${courseId}`);
                 alert('Course deleted successfully!');
                 fetchCourses(); // Refresh the list
             } catch (err) {
