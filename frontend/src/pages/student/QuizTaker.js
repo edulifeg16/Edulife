@@ -157,9 +157,122 @@ const QuizTaker = () => {
                 <main className="main-content">
                     <h1>Quiz Completed!</h1>
                     <h2>Your Score: {results.score} / {results.totalQuestions}</h2>
-                    <button onClick={() => navigate('/quizzes-history')} style={{ padding: '10px 20px', fontSize: '16px' }}>
+                    <button onClick={() => navigate('/quizzes-history')} style={{ padding: '10px 20px', fontSize: '16px', marginBottom: '30px' }}>
                         Back to Quizzes History
                     </button>
+
+                    {/* REVIEW SECTION */}
+                    <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
+                        <h3>Quiz Review</h3>
+                        {quiz && quiz.questions.map((question, index) => {
+                            const userAnswer = answers[index];
+                            const correctAnswerIndex = question.correctOptionIndex;
+                            const isCorrect = userAnswer === correctAnswerIndex;
+
+                            return (
+                                <div 
+                                    key={index}
+                                    style={{
+                                        backgroundColor: '#fff',
+                                        padding: '20px',
+                                        marginBottom: '20px',
+                                        borderRadius: '8px',
+                                        border: `3px solid ${isCorrect ? '#10B981' : '#EF4444'}`,
+                                        borderLeft: `5px solid ${isCorrect ? '#10B981' : '#EF4444'}`
+                                    }}
+                                >
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <h4 style={{ color: '#333', marginBottom: '10px' }}>
+                                            Question {index + 1}: {question.questionText}
+                                        </h4>
+                                        <div style={{ 
+                                            display: 'inline-block',
+                                            padding: '5px 10px',
+                                            borderRadius: '4px',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            backgroundColor: isCorrect ? '#D1FAE5' : '#FEE2E2',
+                                            color: isCorrect ? '#065F46' : '#991B1B'
+                                        }}>
+                                            {isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                                        </div>
+                                    </div>
+
+                                    {/* OPTIONS WITH ANSWER INDICATORS */}
+                                    <div style={{ marginBottom: '15px' }}>
+                                        {question.options.map((option, optionIndex) => {
+                                            const isUserAnswer = userAnswer === optionIndex;
+                                            const isCorrectOption = correctAnswerIndex === optionIndex;
+                                            
+                                            let backgroundColor = '#fff';
+                                            let borderColor = '#ccc';
+                                            
+                                            if (isCorrectOption) {
+                                                backgroundColor = '#D1FAE5';
+                                                borderColor = '#10B981';
+                                            } else if (isUserAnswer && !isCorrect) {
+                                                backgroundColor = '#FEE2E2';
+                                                borderColor = '#EF4444';
+                                            }
+
+                                            return (
+                                                <div
+                                                    key={optionIndex}
+                                                    style={{
+                                                        padding: '15px',
+                                                        border: `2px solid ${borderColor}`,
+                                                        borderRadius: '5px',
+                                                        marginBottom: '10px',
+                                                        backgroundColor: backgroundColor,
+                                                        position: 'relative'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <span>{option}</span>
+                                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                                            {isCorrectOption && (
+                                                                <span style={{ 
+                                                                    color: '#10B981', 
+                                                                    fontWeight: 'bold',
+                                                                    fontSize: '14px'
+                                                                }}>
+                                                                    ✓ Correct Answer
+                                                                </span>
+                                                            )}
+                                                            {isUserAnswer && !isCorrectOption && (
+                                                                <span style={{ 
+                                                                    color: '#EF4444', 
+                                                                    fontWeight: 'bold',
+                                                                    fontSize: '14px'
+                                                                }}>
+                                                                    Your Answer
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* EXPLANATION (if available) */}
+                                    {question.explanation && (
+                                        <div style={{
+                                            backgroundColor: '#F3F4F6',
+                                            padding: '12px',
+                                            borderRadius: '5px',
+                                            borderLeft: '4px solid #3B82F6',
+                                            marginTop: '12px',
+                                            fontSize: '14px',
+                                            color: '#1F2937'
+                                        }}>
+                                            <strong>Explanation:</strong> {question.explanation}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </main>
             </div>
         );

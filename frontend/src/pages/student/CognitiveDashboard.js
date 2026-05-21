@@ -237,40 +237,32 @@ const CognitiveDashboard = () => {
                     Your Learning Journey
                 </h2>
 
-                <div style={{ marginTop: '20px' }}>
-                    {loading ? (
-                        <div style={{
-                            padding: '40px',
-                            textAlign: 'center',
-                            background: '#fff',
-                            borderRadius: '15px',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-                        }}>
-                            <p style={{ fontSize: '1.2rem', color: '#4A5568' }}>
-                                <span role="img" aria-label="hourglass">⌛</span> Getting your amazing courses ready...
-                            </p>
-                        </div>
-                    ) : courses.length > 0 ? (
-                        <div style={{ display: 'grid', gap: '25px' }}>
-                            {courses.map(course => <CourseCard key={course._id} course={course} />)}
-                        </div>
-                    ) : (
-                        <div style={{
-                            padding: '40px',
-                            textAlign: 'center',
-                            background: '#fff',
-                            borderRadius: '15px',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                            border: '2px dashed #e2e8f0'
-                        }}>
-                            <span role="img" aria-label="books" style={{ fontSize: '3rem', marginBottom: '15px' }}>📚</span>
-                            <p style={{ fontSize: '1.2rem', color: '#4A5568', margin: '10px 0' }}>
-                                No courses available right now
-                            </p>
-                            <p style={{ color: '#718096' }}>Check back soon for exciting new lessons!</p>
-                        </div>
-                    )}
-                </div>
+                {/* Browse All Courses Button */}
+                <Link 
+                    to="/new-courses"
+                    style={{
+                        display: 'inline-block',
+                        background: 'linear-gradient(135deg, #6B46C1 0%, #4834d4 100%)',
+                        color: 'white',
+                        padding: '15px 40px',
+                        borderRadius: '10px',
+                        fontWeight: '600',
+                        fontSize: '1.1rem',
+                        textDecoration: 'none',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 15px rgba(107, 70, 193, 0.3)',
+                        marginTop: '20px'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(107, 70, 193, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(107, 70, 193, 0.3)';
+                    }}>
+                    Explore All Courses →
+                </Link>
             </main>
         </div>
     );

@@ -25,7 +25,7 @@ exports.getQuizzes = async (req, res) => {
 
 exports.getQuizById = async (req, res) => {
     try {
-        const quiz = await Quiz.findById(req.params.id).select('-questions.correctOptionIndex');
+        const quiz = await Quiz.findById(req.params.id);
         if (!quiz) {
             return res.status(404).json({ msg: 'Quiz not found' });
         }
